@@ -298,3 +298,34 @@
   .ad-formgrid { grid-template-columns: 1fr; }
   .admin__content { padding: 16px; }
 }
+
+/* ---------- Audit log page ---------- */
+.ad-table--log td { vertical-align: top; font-size: 13.5px; }
+.ad-log-time { white-space: nowrap; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.ad-log-user { font-weight: 600; }
+.ad-log-ip { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; color: var(--text-soft); }
+.ad-log-entity { color: var(--text-soft); }
+.ad-logrow { cursor: pointer; }
+.ad-logrow:hover { background: var(--surface-2); }
+.ad-role { display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 6px; }
+.ad-role--admin { background: #ede9fe; color: #6d28d9; }
+.ad-role--staff { background: #dbeafe; color: #1d4ed8; }
+.ad-role--sale  { background: #dcfce7; color: #15803d; }
+.ad-role--guest { background: #f1f5f9; color: #64748b; }
+.ad-act { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.ad-act--danger { color: #dc2626; }
+.ad-status { font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; padding: 1px 7px; border-radius: 6px; }
+.ad-status--ok { background: #dcfce7; color: #15803d; }
+.ad-status--bad { background: #fef2f2; color: #b91c1c; }
+.ad-chev { color: #94a3b8; transition: transform .15s ease; }
+.ad-chev.is-open { transform: rotate(180deg); }
+.ad-logdetail > td { background: #f8fafc; }
+.ad-logdetail__grid { display: flex; flex-direction: column; gap: 10px; padding: 6px 4px 10px; }
+.ad-logdetail__grid > div { display: grid; grid-template-columns: 110px 1fr; gap: 10px; font-size: 13px; }
+.ad-logdetail__grid b { color: var(--text-soft); font-weight: 600; }
+.ad-logdetail__grid span { word-break: break-all; }
+.ad-logdetail__json { grid-template-columns: 110px 1fr; }
+.ad-logdetail__json pre {
+  margin: 0; background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px;
+  font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+}

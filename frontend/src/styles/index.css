@@ -273,8 +273,8 @@ img { display: block; max-width: 100%; }
 }
 .activebar__chip svg { opacity: .7; }
 .activebar__chip:hover { background: #dbeafe; }
-.activebar__clear { font-size: 13px; font-weight: 600; color: var(--text-soft); padding: 6px 8px; }
-.activebar__clear:hover { color: var(--text); }
+.activebar__clear { font-size: 13px; font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; padding: 5px 11px; border-radius: 8px; }
+.activebar__clear:hover { background: #fee2e2; border-color: #fca5a5; }
 
 /* ---------- Bottom sheet (mobile filters) ---------- */
 .overlay {
@@ -446,7 +446,8 @@ img { display: block; max-width: 100%; }
     padding: 16px 18px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 15px;
   }
   .sidebar__head > span { display: inline-flex; align-items: center; gap: 8px; }
-  .link-clear { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: var(--primary); }
+  .link-clear { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; padding: 5px 10px; border-radius: 8px; }
+  .link-clear:hover { background: #fee2e2; border-color: #fca5a5; }
   .sidebar__body { padding: 18px; overflow-y: auto; }
   .sidebar__body .field:last-child { margin-bottom: 4px; }
 
@@ -493,3 +494,30 @@ img { display: block; max-width: 100%; }
 @media (min-width: 1200px) {
   .grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ---------- disabled (empty) filter option ---------- */
+.option--off { opacity: .5; cursor: not-allowed; background: var(--surface-2); color: var(--text-soft); }
+.option--off:hover { border-color: var(--border); }
+.option--off .option__count { background: #e2e8f0; color: #94a3b8; }
+
+/* ---------- count badge on category nav ---------- */
+.navmenu__n { margin-left: 6px; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 999px; background: #e2e8f0; color: #475569; }
+.navmenu__item.is-active .navmenu__n { background: rgba(255,255,255,.25); color: #fff; }
+.price-inputs .pricecol { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------- site footer (company info) ---------- */
+.sitefoot { border-top: 1px solid var(--border); background: var(--surface); margin-top: 24px;
+  padding: 22px 16px calc(22px + var(--safe-bottom)); }
+.sitefoot__inner { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.sitefoot__brand { display: flex; align-items: flex-start; gap: 12px; }
+.sitefoot__brand img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
+.sitefoot__name { font-weight: 700; color: var(--text); font-size: 15px; }
+.sitefoot__addr { display: flex; align-items: flex-start; gap: 6px; color: var(--text-soft); font-size: 13.5px; margin-top: 4px; line-height: 1.55; }
+.sitefoot__addr svg { flex: 0 0 auto; margin-top: 3px; }
+.sitefoot__copy { font-size: 12.5px; color: var(--text-soft); border-top: 1px dashed var(--border); padding-top: 14px; }
+
+/* ---------- status chip: count + disabled ---------- */
+.chip__n { margin-left: 6px; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 999px; background: #e2e8f0; color: #475569; }
+.chip--active .chip__n { background: rgba(255,255,255,.25); color: #fff; }
+.chip--off { opacity: .45; cursor: not-allowed; }
+.chip--off:hover { border-color: var(--border); }

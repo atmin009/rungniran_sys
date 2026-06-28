@@ -2,10 +2,12 @@ import { Router } from 'express';
 import { requireStaff, requireAdmin, setPin } from '../auth.js';
 import { uploadCarImages, uploadSheet, publicUrl } from '../uploads.js';
 import { buildTemplate, parseAndValidate } from '../import.js';
+import { auditAdmin } from '../audit.js';
 import * as repo from '../repo.js';
 
 const router = Router();
 router.use(requireStaff);
+router.use(auditAdmin); // log every write (POST/PUT/PATCH/DELETE) with user + IP
 
 const wrap = (fn) => async (req, res, next) => {
   try { await fn(req, res); } catch (err) {
@@ -124,6 +126,18 @@ router.delete('/users/:id', wrap(async (req, res) => { await repo.deleteUser(req
 
 // Settings — change sale PIN (admin only)
 router.put('/settings/pin', wrap(async (req, res) => { await setPin(req.body.pin); res.json({ ok: true }); }));
+
+// Audit logs (admin only) — view who did what, from where
+router.use(['/logs'], requireAdmin);
+router.get('/logs', wrap(async (req, res) => {
+  const q = req.query;
+  res.json(await repo.listAuditLogs({
+    q: q.q, action: q.action, role: q.role, from: q.from, to: q.to,
+    page: Math.max(1, parseInt(q.page) || 1),
+    limit: Math.min(100, Math.max(1, parseInt(q.limit) || 30)),
+  }));
+}));
+router.get('/logs/actions', wrap(async (req, res) => res.json(await repo.listAuditActions())));
 
 // Option constants for forms (staff + admin)
 router.get('/options', wrap(async (req, res) => res.json(await repo.getFilters())));

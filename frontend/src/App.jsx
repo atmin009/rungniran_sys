@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import CarList from './pages/CarList.jsx';
 import CarDetail from './pages/CarDetail.jsx';
 import SaleGate from './SaleGate.jsx';
+import SaleFooter from './components/SaleFooter.jsx';
 import { AuthProvider, RequireAuth, RequireAdmin } from './admin/auth.jsx';
 import AdminLayout from './admin/AdminLayout.jsx';
 import Login from './admin/Login.jsx';
@@ -11,6 +12,7 @@ import CarForm from './admin/CarForm.jsx';
 import ImportCars from './admin/ImportCars.jsx';
 import { BrandsPage, CarTypesPage, BranchesPage, DealersPage } from './admin/MasterData.jsx';
 import Users from './admin/Users.jsx';
+import Logs from './admin/Logs.jsx';
 import Settings from './admin/Settings.jsx';
 
 function PublicSite() {
@@ -21,6 +23,7 @@ function PublicSite() {
           <Route path="/" element={<CarList />} />
           <Route path="/cars/:id" element={<CarDetail />} />
         </Routes>
+        <SaleFooter />
       </div>
     </SaleGate>
   );
@@ -45,6 +48,7 @@ export default function App() {
           <Route path="branches" element={<RequireAdmin><BranchesPage /></RequireAdmin>} />
           <Route path="dealers" element={<RequireAdmin><DealersPage /></RequireAdmin>} />
           <Route path="users" element={<RequireAdmin><Users /></RequireAdmin>} />
+          <Route path="logs" element={<RequireAdmin><Logs /></RequireAdmin>} />
           <Route path="settings" element={<RequireAdmin><Settings /></RequireAdmin>} />
         </Route>
         <Route path="/*" element={<PublicSite />} />

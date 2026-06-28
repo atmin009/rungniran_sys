@@ -1,10 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, RotateCcw, Check } from 'lucide-react';
 import FilterFields from './FilterFields.jsx';
+import { fetchFacets } from '../api.js';
 
 export default function FilterSheet({ meta, value, resultCount, onClose, onApply, onClear }) {
   const [draft, setDraft] = useState(value);
+  const [facets, setFacets] = useState(null);
   const change = (key, val) => setDraft((d) => ({ ...d, [key]: val }));
+
+  // live counts that follow what the user toggles inside the sheet
+  useEffect(() => {
+    let active = true;
+    fetchFacets(draft).then((f) => active && setFacets(f)).catch(() => {});
+    return () => { active = false; };
+  }, [draft]);
+
+  const count = facets ? facets.total : resultCount;
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -16,7 +27,7 @@ export default function FilterSheet({ meta, value, resultCount, onClose, onApply
         </div>
 
         <div className="sheet__body">
-          <FilterFields meta={meta} value={draft} onChange={change} />
+          <FilterFields meta={meta} value={draft} onChange={change} facets={facets} />
         </div>
 
         <div className="sheet__foot">
@@ -24,7 +35,7 @@ export default function FilterSheet({ meta, value, resultCount, onClose, onApply
             <RotateCcw size={18} /> ล้างค่า
           </button>
           <button className="btn btn--solid" onClick={() => onApply(draft)}>
-            <Check size={18} /> ดูผลลัพธ์{typeof resultCount === 'number' ? ` (${resultCount})` : ''}
+            <Check size={18} /> ดูผลลัพธ์{typeof count === 'number' ? ` (${count})` : ''}
           </button>
         </div>
       </div>

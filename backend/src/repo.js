@@ -134,6 +134,63 @@ export async function listCars(params) {
   };
 }
 
+// ---------------- faceted counts (contextual to current filters) ----------------
+function facetWhere(f, exclude) {
+  const where = [];
+  const args = [];
+  const eq = (key, sql, val) => {
+    if (key !== exclude && val != null && val !== '') { where.push(sql); args.push(val); }
+  };
+  eq('type', 'c.car_type = ?', f.type);
+  eq('brand', 'c.brand = ?', f.brand);
+  eq('status', 'c.status = ?', f.status);
+  eq('transmission', 'c.transmission = ?', f.transmission);
+  eq('drivetrain', 'c.drivetrain = ?', f.drivetrain);
+  eq('branch', 'c.branch_id = ?', f.branch);
+  eq('dealer', 'c.dealer_id = ?', f.dealer);
+  if (exclude !== 'price') {
+    if (f.minPrice) { where.push('c.price >= ?'); args.push(f.minPrice); }
+    if (f.maxPrice) { where.push('c.price <= ?'); args.push(f.maxPrice); }
+  }
+  if (exclude !== 'featured' && (f.featured === '1' || f.featured === 1 || f.featured === true)) {
+    where.push('c.featured = 1');
+  }
+  if (f.q) {
+    where.push('(c.brand LIKE ? OR c.model LIKE ? OR c.license_plate LIKE ?)');
+    const l = `%${f.q}%`; args.push(l, l, l);
+  }
+  return { sql: where.length ? `WHERE ${where.join(' AND ')}` : '', args };
+}
+
+async function groupMap(col, w) {
+  const [rows] = await pool.query(`SELECT ${col} AS k, COUNT(*) AS n FROM cars c ${w.sql} GROUP BY ${col}`, w.args);
+  const m = {};
+  rows.forEach((r) => { if (r.k != null) m[r.k] = Number(r.n); });
+  return m;
+}
+
+export async function getFacets(filters = {}) {
+  if (mockMode) return null;
+  const [carTypes, brands, statuses, transmissions, drivetrains, branches, dealers] = await Promise.all([
+    groupMap('c.car_type', facetWhere(filters, 'type')),
+    groupMap('c.brand', facetWhere(filters, 'brand')),
+    groupMap('c.status', facetWhere(filters, 'status')),
+    groupMap('c.transmission', facetWhere(filters, 'transmission')),
+    groupMap('c.drivetrain', facetWhere(filters, 'drivetrain')),
+    groupMap('c.branch_id', facetWhere(filters, 'branch')),
+    groupMap('c.dealer_id', facetWhere(filters, 'dealer')),
+  ]);
+  const fw = facetWhere(filters, 'featured');
+  const [[fr]] = await pool.query(
+    `SELECT COUNT(*) AS n FROM cars c ${fw.sql ? `${fw.sql} AND` : 'WHERE'} c.featured = 1`, fw.args);
+  const tw = facetWhere(filters, null);
+  const [[tr]] = await pool.query(`SELECT COUNT(*) AS n FROM cars c ${tw.sql}`, tw.args);
+  return {
+    carTypes, brands, statuses, transmissions, drivetrains, branches, dealers,
+    featured: Number(fr.n), total: Number(tr.n),
+  };
+}
+
 function listMock(params, offset) {
   const {
     type, brand, status, transmission, drivetrain, branch, dealer,
@@ -484,4 +541,57 @@ export async function deleteUser(id, currentUserId) {
     if (c.n <= 1) { const e = new Error('ต้องมีผู้ดูแล (admin) อย่างน้อย 1 คน'); e.status = 409; throw e; }
   }
   await pool.query('DELETE FROM users WHERE id = ?', [id]);
+}
+
+// ============================================================
+//  AUDIT LOGS (read — admin only)
+// ============================================================
+function mapLog(r) {
+  let detail = r.detail;
+  if (typeof detail === 'string') { try { detail = JSON.parse(detail); } catch { /* keep raw */ } }
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    actorRole: r.actor_role,
+    actorId: r.actor_id,
+    actorName: r.actor_name,
+    action: r.action,
+    entity: r.entity,
+    entityId: r.entity_id,
+    method: r.method,
+    path: r.path,
+    status: r.status,
+    ip: r.ip,
+    userAgent: r.user_agent,
+    detail,
+  };
+}
+
+export async function listAuditLogs({ page = 1, limit = 30, q, action, role, from, to } = {}) {
+  if (mockMode) return { data: [], pagination: { page: 1, totalPages: 1, total: 0 } };
+  const where = [];
+  const args = [];
+  if (q) { const s = `%${q}%`; where.push('(actor_name LIKE ? OR ip LIKE ? OR path LIKE ? OR action LIKE ? OR entity_id LIKE ?)'); args.push(s, s, s, s, s); }
+  if (action) { where.push('action = ?'); args.push(action); }
+  if (role) { where.push('actor_role = ?'); args.push(role); }
+  if (from) { where.push('created_at >= ?'); args.push(`${from} 00:00:00`); }
+  if (to) { where.push('created_at <= ?'); args.push(`${to} 23:59:59`); }
+  const w = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const [[{ n }]] = await pool.query(`SELECT COUNT(*) AS n FROM audit_logs ${w}`, args);
+  const lim = Math.min(100, Math.max(1, Number(limit) || 30));
+  const pg = Math.max(1, Number(page) || 1);
+  const [rows] = await pool.query(
+    `SELECT * FROM audit_logs ${w} ORDER BY id DESC LIMIT ? OFFSET ?`,
+    [...args, lim, (pg - 1) * lim],
+  );
+  return {
+    data: rows.map(mapLog),
+    pagination: { page: pg, totalPages: Math.max(1, Math.ceil(n / lim)), total: n },
+  };
+}
+
+export async function listAuditActions() {
+  if (mockMode) return [];
+  const [rows] = await pool.query('SELECT action, COUNT(*) AS count FROM audit_logs GROUP BY action ORDER BY count DESC');
+  return rows;
 }

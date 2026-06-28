@@ -42,6 +42,14 @@ export const adminStats = () => request('/admin/stats');
 export const adminOptions = () => request('/admin/options');
 export const adminUpdatePin = (pin) => request('/admin/settings/pin', { method: 'PUT', body: { pin } });
 
+export const adminLogs = (params = {}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => { if (v !== '' && v != null) qs.append(k, v); });
+  const q = qs.toString();
+  return request(`/admin/logs${q ? `?${q}` : ''}`);
+};
+export const adminLogActions = () => request('/admin/logs/actions');
+
 async function upload(path, formData) {
   const headers = {};
   const token = getToken();

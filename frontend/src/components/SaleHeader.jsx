@@ -20,6 +20,7 @@ export default function SaleHeader({ meta: metaProp, count, onBack, onShare, chi
   }, [metaProp]);
 
   const types = (meta?.carTypes || []).filter((t) => Number(t.count ?? 1) > 0);
+  const total = types.reduce((s, t) => s + Number(t.count || 0), 0);
 
   return (
     <header className="appbar">
@@ -47,7 +48,7 @@ export default function SaleHeader({ meta: metaProp, count, onBack, onShare, chi
 
       <nav className="navmenu" aria-label="ประเภทรถ">
         <Link to="/" className={`navmenu__item ${activeType === '' ? 'is-active' : ''}`}>
-          ทั้งหมด
+          ทั้งหมด{total > 0 && <span className="navmenu__n">{total}</span>}
         </Link>
         {types.map((t) => (
           <Link
@@ -55,7 +56,7 @@ export default function SaleHeader({ meta: metaProp, count, onBack, onShare, chi
             to={`/?type=${encodeURIComponent(t.value)}`}
             className={`navmenu__item ${activeType === t.value ? 'is-active' : ''}`}
           >
-            {t.label}
+            {t.label}<span className="navmenu__n">{t.count}</span>
           </Link>
         ))}
       </nav>

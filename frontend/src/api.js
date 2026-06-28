@@ -50,3 +50,12 @@ export function fetchCar(id) {
 export function fetchFilters() {
   return request('/meta/filters');
 }
+
+export function fetchFacets(params = {}) {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== '' && v !== null && v !== undefined) qs.append(k, v);
+  });
+  const query = qs.toString();
+  return request(`/meta/facets${query ? `?${query}` : ''}`);
+}

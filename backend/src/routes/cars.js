@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { listCars, getCar } from '../repo.js';
 import { requireAuth } from '../auth.js';
+import { recordAudit, clientIp } from '../audit.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -30,6 +31,14 @@ router.get('/:id', async (req, res, next) => {
   try {
     const car = await getCar(req.params.id);
     if (!car) return res.status(404).json({ error: 'ไม่พบรถยนต์คันนี้' });
+    recordAudit({
+      actorRole: req.user?.role || 'sale', actorId: req.user?.id,
+      actorName: req.user?.name || req.user?.username,
+      action: 'car.view', entity: 'cars', entityId: req.params.id,
+      method: 'GET', path: req.originalUrl, status: 200,
+      ip: clientIp(req), userAgent: req.headers['user-agent'],
+      detail: { car: `${car.brand} ${car.model}`, plate: car.licensePlate },
+    });
     res.json(car);
   } catch (err) {
     next(err);

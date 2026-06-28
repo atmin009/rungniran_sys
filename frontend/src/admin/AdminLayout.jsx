@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Car, Tag, Shapes, MapPin, Users, UserCog, KeyRound, LogOut, Menu, ExternalLink,
+  LayoutDashboard, Car, Tag, Shapes, MapPin, Users, UserCog, KeyRound, LogOut, Menu, ExternalLink, ScrollText,
 } from 'lucide-react';
 import { useAuth } from './auth.jsx';
 import logo from '../logo_rungniran.png';
@@ -16,6 +16,7 @@ const NAV = [
   { to: '/admin/dealers', icon: Users, label: 'ดีลเลอร์', admin: true },
   { type: 'group', label: 'ระบบ', admin: true },
   { to: '/admin/users', icon: UserCog, label: 'ผู้ใช้และสิทธิ์', admin: true },
+  { to: '/admin/logs', icon: ScrollText, label: 'บันทึกการใช้งาน', admin: true },
   { to: '/admin/settings', icon: KeyRound, label: 'PIN ฝั่งขาย', admin: true },
 ];
 

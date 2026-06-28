@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { login, verifyPin, issueSaleToken } from '../auth.js';
+import { recordAudit, clientIp } from '../audit.js';
 
 const router = Router();
 
@@ -8,7 +9,18 @@ router.post('/login', async (req, res, next) => {
     const { username, password } = req.body || {};
     if (!username || !password) return res.status(400).json({ error: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน' });
     const result = await login(username, password);
-    if (!result) return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+    const base = {
+      method: 'POST', path: req.originalUrl, ip: clientIp(req),
+      userAgent: req.headers['user-agent'], detail: { username },
+    };
+    if (!result) {
+      recordAudit({ ...base, action: 'login.fail', actorName: username, actorRole: 'guest', status: 401 });
+      return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+    }
+    recordAudit({
+      ...base, action: 'login.success', status: 200,
+      actorId: result.user.id, actorName: result.user.name || result.user.username, actorRole: result.user.role,
+    });
     res.json(result);
   } catch (err) {
     next(err);
@@ -21,7 +33,15 @@ router.post('/pin', async (req, res, next) => {
     const { pin } = req.body || {};
     if (!pin) return res.status(400).json({ error: 'กรุณากรอก PIN' });
     const ok = await verifyPin(pin);
-    if (!ok) return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' });
+    const base = {
+      method: 'POST', path: req.originalUrl, ip: clientIp(req),
+      userAgent: req.headers['user-agent'], actorRole: 'sale',
+    };
+    if (!ok) {
+      recordAudit({ ...base, action: 'pin.fail', status: 401 });
+      return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' });
+    }
+    recordAudit({ ...base, action: 'pin.success', status: 200 });
     res.json({ token: issueSaleToken() });
   } catch (err) {
     next(err);

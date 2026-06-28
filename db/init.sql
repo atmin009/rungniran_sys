@@ -81,6 +81,31 @@ CREATE TABLE IF NOT EXISTS cars (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
+-- Audit log (บันทึกการใช้งานละเอียด: ใคร ทำอะไร ที่ไหน IP ใด)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  actor_role  VARCHAR(20),                 -- admin | staff | sale | guest
+  actor_id    INT,
+  actor_name  VARCHAR(100),
+  action      VARCHAR(60) NOT NULL,        -- login.success, pin.change, cars.create, car.view ...
+  entity      VARCHAR(40),
+  entity_id   VARCHAR(40),
+  method      VARCHAR(8),
+  path        VARCHAR(255),
+  status      INT,
+  ip          VARCHAR(64),
+  user_agent  VARCHAR(255),
+  detail      JSON,
+  INDEX idx_log_created (created_at),
+  INDEX idx_log_actor (actor_name),
+  INDEX idx_log_action (action),
+  INDEX idx_log_role (actor_role),
+  INDEX idx_log_ip (ip)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
 -- Seed data (generated from rungniran wp_posts export)
 -- ------------------------------------------------------------
 INSERT INTO branches (name, province) VALUES

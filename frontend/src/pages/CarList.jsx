@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Search, X, SlidersHorizontal, ArrowUpDown, PackageOpen, RotateCcw, Star,
 } from 'lucide-react';
-import { fetchCars, fetchFilters } from '../api.js';
+import { fetchCars, fetchFilters, fetchFacets } from '../api.js';
 import { SORT_OPTIONS, formatPrice } from '../constants.js';
 import CarCard from '../components/CarCard.jsx';
 import FilterFields from '../components/FilterFields.jsx';
@@ -27,6 +27,7 @@ export default function CarList() {
   const [filters, setFilters] = useState(EMPTY);
   const [searchInput, setSearchInput] = useState('');
   const [meta, setMeta] = useState(null);
+  const [facets, setFacets] = useState(null);
   const [cars, setCars] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -60,6 +61,13 @@ export default function CarList() {
       .finally(() => active && setLoading(false));
     if (!firstLoad.current) window.scrollTo({ top: 0, behavior: 'smooth' });
     firstLoad.current = false;
+    return () => { active = false; };
+  }, [filters]);
+
+  // contextual counts for every filter option, given the current filters
+  useEffect(() => {
+    let active = true;
+    fetchFacets(filters).then((f) => active && setFacets(f)).catch(() => active && setFacets(null));
     return () => { active = false; };
   }, [filters]);
 
@@ -136,7 +144,7 @@ export default function CarList() {
             )}
           </div>
           <div className="sidebar__body">
-            <FilterFields meta={meta} value={filters} onChange={setFilter} />
+            <FilterFields meta={meta} value={filters} onChange={setFilter} facets={facets} />
           </div>
         </aside>
 
@@ -145,18 +153,25 @@ export default function CarList() {
             <button
               className={`chip ${!filters.status && !filters.featured ? 'chip--active' : ''}`}
               onClick={() => { setFilter('status', ''); setFilter('featured', ''); }}
-            >ทั้งหมด</button>
+            >ทั้งหมด{facets ? <span className="chip__n">{facets.total}</span> : null}</button>
             <button
-              className={`chip chip--star ${filters.featured ? 'chip--active' : ''}`}
+              className={`chip chip--star ${filters.featured ? 'chip--active' : ''} ${facets && !facets.featured && !filters.featured ? 'chip--off' : ''}`}
+              disabled={!!facets && !facets.featured && !filters.featured}
               onClick={() => setFilter('featured', filters.featured ? '' : '1')}
-            ><Star size={14} fill={filters.featured ? '#fff' : 'none'} /> รถแนะนำ</button>
-            {STATUS_CHIPS.map((c) => (
-              <button
-                key={c.value}
-                className={`chip ${filters.status === c.value ? 'chip--active' : ''}`}
-                onClick={() => setFilter('status', filters.status === c.value ? '' : c.value)}
-              >{c.label}</button>
-            ))}
+            ><Star size={14} fill={filters.featured ? '#fff' : 'none'} /> รถแนะนำ{facets ? <span className="chip__n">{facets.featured}</span> : null}</button>
+            {STATUS_CHIPS.map((c) => {
+              const active = filters.status === c.value;
+              const n = facets?.statuses?.[c.value] ?? null;
+              const off = !!facets && !active && (n ?? 0) === 0;
+              return (
+                <button
+                  key={c.value}
+                  className={`chip ${active ? 'chip--active' : ''} ${off ? 'chip--off' : ''}`}
+                  disabled={off}
+                  onClick={() => setFilter('status', active ? '' : c.value)}
+                >{c.label}{n != null ? <span className="chip__n">{n}</span> : null}</button>
+              );
+            })}
           </div>
 
           {activeChips.length > 0 && (
